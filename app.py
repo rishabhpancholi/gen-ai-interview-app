@@ -1,0 +1,39 @@
+import logging
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
+from core import api_config, redis_config
+from database import connect_db, connect_redis
+from contextlib import asynccontextmanager
+from routes import auth_router
+
+logger = logging.getLogger("uvicorn.error")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    db_client = await connect_db(api_config.mongo_db_uri)
+    redis_client = await connect_redis(redis_config)
+    app.state.db_client = db_client
+    app.state.redis_client = redis_client
+    yield
+
+    logger.info("Closing connection with MongoDB!")
+    await db_client.aclose()
+    logger.info("Closing connection with Redis!")
+    await redis_client.close()
+
+
+app = FastAPI(lifespan=lifespan)
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(req: Request, exc: Exception) -> JSONResponse:
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "Something went wrong"},
+    )
+
+
+routers = [auth_router]
+for router in routers:
+    app.include_router(router)
