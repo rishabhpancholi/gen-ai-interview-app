@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Body, Request, Response, status
 from redis.asyncio import Redis
 from pymongo.asynchronous.database import AsyncDatabase
-from utils import get_db, get_redis
+from core import get_db, get_redis
 from models import CreateUser, LoginUser
 from services import signup, login, blacklist_token
 
