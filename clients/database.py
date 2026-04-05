@@ -2,7 +2,7 @@ import logging
 from redis.asyncio import Redis
 from pymongo.server_api import ServerApi
 from pymongo import AsyncMongoClient
-from core import RedisConfig
+from core import RedisConfig, api_config
 
 logger = logging.getLogger("uvicorn.error")
 
@@ -14,6 +14,10 @@ async def connect_db(db_uri: str) -> AsyncMongoClient:
         await client.admin.command("ping")
         logger.info("Pinged your deployment. You successfully connected to MongoDB!")
 
+        users = client.get_database(api_config.mongo_db_database_name).get_collection(
+            "users"
+        )
+        await users.create_index([("email", 1)], unique=True, name="unique_email_index")
         return client
     except Exception:
         logger.exception("Failed to connect to the database")

@@ -1,4 +1,4 @@
-from core.config import api_config, redis_config, RedisConfig
+from core.config import api_config, redis_config, RedisConfig, Clients, LLM
 from core.dependencies import get_db, get_redis, authorize_user
 
 __all__ = [
@@ -8,4 +8,6 @@ __all__ = [
     "get_db",
     "get_redis",
     "authorize_user",
+    "Clients",
+    "LLM",
 ]

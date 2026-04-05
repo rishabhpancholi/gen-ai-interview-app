@@ -1,9 +1,10 @@
 import logging
+from langchain_groq import ChatGroq
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-from core import api_config, redis_config
-from database import connect_db, connect_redis
+from core import api_config, redis_config, Clients
+from clients import connect_db, connect_redis
 from contextlib import asynccontextmanager
 from routes import auth_router
 
@@ -14,8 +15,8 @@ logger = logging.getLogger("uvicorn.error")
 async def lifespan(app: FastAPI):
     db_client = await connect_db(api_config.mongo_db_uri)
     redis_client = await connect_redis(redis_config)
-    app.state.db_client = db_client
-    app.state.redis_client = redis_client
+    llm = ChatGroq(model=api_config.groq_model, api_key=api_config.groq_api_key)
+    app.state.clients = Clients(db_client=db_client, redis_client=redis_client, llm=llm)
     yield
 
     logger.info("Closing connection with MongoDB!")

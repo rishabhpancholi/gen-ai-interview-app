@@ -1,6 +1,9 @@
 import logging
+from typing import Protocol
 from dataclasses import dataclass
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pymongo import AsyncMongoClient
+from redis.asyncio import Redis
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
@@ -17,6 +20,11 @@ class Config(BaseSettings):
     redis_username: str
     redis_port: int
     redis_password: str
+    fake_hash: str
+    jwt_algorithm: str
+    access_token_expire_minutes: int
+    groq_api_key: str
+    groq_model: str
 
     @property
     def mongo_db_uri(self) -> str:
@@ -31,6 +39,17 @@ class RedisConfig:
     port: int
     username: str
     password: str
+
+
+class LLM(Protocol):
+    pass
+
+
+@dataclass
+class Clients:
+    db_client: AsyncMongoClient
+    redis_client: Redis
+    llm: LLM
 
 
 try:
